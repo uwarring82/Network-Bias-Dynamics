@@ -53,6 +53,7 @@ and its **time-averaged shift**, comparing architectures:
 Python ≥ 3.9 and:
 ```bash
 pip install numpy matplotlib
+```
 
 ## License
 
