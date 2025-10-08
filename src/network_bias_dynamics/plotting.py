@@ -8,7 +8,11 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .analysis import trajectory_mean_and_sem
+from .analysis import (
+    summarize_single_bias,
+    summarize_topology_means,
+    trajectory_mean_and_sem,
+)
 
 
 COLORS = {
@@ -39,7 +43,13 @@ def _plot_with_sem(
     return ta
 
 
-def plot_compare_topologies(results: Dict[str, object], save_path: str | Path) -> None:
+def plot_compare_topologies(
+    results: Dict[str, object],
+    save_path: str | Path,
+    *,
+    write_csv: bool = False,
+    csv_path: str | Path | None = None,
+) -> None:
     """Plot trajectories comparing the three topologies."""
 
     time = np.asarray(results["time"], dtype=float)
@@ -63,8 +73,23 @@ def plot_compare_topologies(results: Dict[str, object], save_path: str | Path) -
     fig.savefig(save_path, dpi=150)
     plt.close(fig)
 
+    if write_csv:
+        summary = summarize_topology_means(
+            {topo: data["time_averages"] for topo, data in results["topologies"].items()},
+            results.get("config", {}),
+        )
+        csv_out = Path(csv_path) if csv_path is not None else Path(save_path).with_suffix(".csv")
+        csv_out.parent.mkdir(parents=True, exist_ok=True)
+        summary.to_csv(csv_out, index=False)
 
-def plot_single_biased_node(results: Dict[str, object], save_path: str | Path) -> None:
+
+def plot_single_biased_node(
+    results: Dict[str, object],
+    save_path: str | Path,
+    *,
+    write_csv: bool = False,
+    csv_path: str | Path | None = None,
+) -> None:
     """Plot trajectories for the four-trace biased-node experiment."""
 
     time = np.asarray(results["time"], dtype=float)
@@ -88,3 +113,13 @@ def plot_single_biased_node(results: Dict[str, object], save_path: str | Path) -
     fig.tight_layout()
     fig.savefig(save_path, dpi=150)
     plt.close(fig)
+
+    if write_csv:
+        summary = summarize_single_bias(
+            {topo: data["time_averages"] for topo, data in results["topologies"].items()},
+            results.get("config", {}),
+            results.get("metadata", {}),
+        )
+        csv_out = Path(csv_path) if csv_path is not None else Path(save_path).with_suffix(".csv")
+        csv_out.parent.mkdir(parents=True, exist_ok=True)
+        summary.to_csv(csv_out, index=False)

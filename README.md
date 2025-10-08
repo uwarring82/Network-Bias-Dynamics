@@ -1,5 +1,7 @@
 # Network Bias Dynamics
 
+[![Open In Colab](https://colab.research.googleusercontent.com/assets/colab-badge.svg)](https://colab.research.google.com/github/uwarring82/Network-Bias-Dynamics/blob/main/notebooks/colab_app.ipynb)
+
 Reproducible simulation suite for studying how small biases propagate through consensus-like averaging dynamics on different network topologies. The model follows a noisy DeGroot-style update
 
 \[
@@ -9,6 +11,12 @@ Reproducible simulation suite for studying how small biases propagate through co
 where `A` encodes neighbour averaging, `\mathbf{b}` injects persistent node biases, and `\boldsymbol{\eta}_t` is IID Gaussian noise.
 
 ![Preview of generated figures](figures/compare_topologies.png)
+
+## Run on Google Colab
+
+Click the badge above to open an interactive Colab notebook.  
+It installs the package from a GitHub tag and provides form fields to run the two main experiments.  
+Results (PNGs + CSVs) are saved in the Colab workspace and can be downloaded locally.
 
 ## Features
 
