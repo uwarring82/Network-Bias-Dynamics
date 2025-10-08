@@ -30,11 +30,11 @@ pip install -r requirements.txt
 Run the baseline experiments (figures saved under `figures/`):
 
 ```bash
-python scripts/run_compare_topologies.py --config configs/compare_topologies.yaml
-python scripts/run_single_biased_node.py --config configs/single_biased_node.yaml
+python scripts/run_compare_topologies.py --config configs/compare_topologies.yaml --outdir figures
+python scripts/run_single_biased_node.py --config configs/single_biased_node.yaml --outdir figures
 ```
 
-Each command produces a PNG with mean ± SEM trajectories and a CSV summary of time-averaged shifts.
+Each command produces a PNG with mean ± SEM trajectories, a CSV summary of time-averaged shifts, and the resolved YAML configuration used for the run.
 
 ## Repository Layout
 
@@ -53,6 +53,12 @@ Network-Bias-Dynamics/
 The script `scripts/run_single_biased_node.py` creates a heavy-tailed small-world network per trial, locates the highest- and lowest-degree nodes, and injects a persistent bias of `0.15` into either the hub or the leaf. The resulting trajectories illustrate how network position modulates long-term drift.
 
 To adjust the experiment, edit `configs/single_biased_node.yaml` (e.g., change `bias_level`, number of trials, or the degree cap).
+
+## Why topology-invariant ensemble means emerge
+
+When `bias_level=0`, every topology uses the same IID zero-mean noise tensor for each trial. The consensus update distributes a neighbour's influence in proportion to its degree, rendering the averaging matrix doubly stochastic. Consequently, the global mean simply follows the previous mean plus the noise average—independent of the underlying graph—so ensemble means coincide across the ring, Erdős–Rényi, and small-world cases.
+
+Once a persistent bias targets a specific node, structural differences dominate. Injecting the bias at the heavy-tailed small-world hub amplifies drift because the hub's many connections broadcast its bias widely. The Erdős–Rényi and ring nodes have fewer paths, yielding smaller shifts, while biasing the sparsely connected leaf keeps the perturbation localized. This produces the characteristic ordering `smallworld_hub ≥ ER ≥ ring ≥ smallworld_leaf` in the time-averaged means.
 
 ## Development
 

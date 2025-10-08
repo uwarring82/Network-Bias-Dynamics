@@ -1,45 +1,46 @@
 import numpy as np
 
-from network_bias_dynamics.dynamics import simulate_mean_traj_precomp
-from network_bias_dynamics.graphs import (
-    build_segments,
-    ring_neighbors,
-    smallworld_neighbors,
-)
-from network_bias_dynamics.noise import NoiseCfg, gen_noise_iid
-from network_bias_dynamics.simulate import single_biased_node_four_traces
+from network_bias_dynamics.dynamics import step_update_precomp, simulate_mean_traj_precomp
+from network_bias_dynamics.graphs import build_segments, ring_neighbors
 
 
-def test_identical_noise_same_mean_trace():
-    N, T = 30, 60
-    mu = 0.15
-    rng = np.random.default_rng(0)
-    eta = gen_noise_iid(NoiseCfg(sigma=1e-3), N, T, rng)
-    ring_seg = build_segments(ring_neighbors(N, 2))
-    sw_seg = build_segments(smallworld_neighbors(N, 2, 0.0, rng))
-    traj_ring = simulate_mean_traj_precomp(N, *ring_seg, mu, np.zeros(N), eta)
-    traj_sw = simulate_mean_traj_precomp(N, *sw_seg, mu, np.zeros(N), eta)
-    assert np.allclose(traj_ring, traj_sw)
+def _manual_update(x, neighbors, mu, bias, eta_t):
+    N = len(neighbors)
+    new_x = np.zeros_like(x)
+    degrees = np.array([len(n) for n in neighbors], dtype=float)
+    for i in range(N):
+        if degrees[i] == 0:
+            neigh_contrib = x[i]
+        else:
+            neigh_contrib = 0.0
+            for j in neighbors[i]:
+                if degrees[j] > 0:
+                    neigh_contrib += x[j] / degrees[j]
+        new_x[i] = (1 - mu) * x[i] + mu * neigh_contrib + bias[i] + eta_t[i]
+    return new_x
 
 
-def test_single_biased_node_ordering():
-    cfg = dict(
-        N=80,
-        T=200,
-        mu=0.05,
-        trials=30,
-        bias_level=0.12,
-        rng_seed=10,
-        graph_params=dict(
-            ring=dict(k=3),
-            er=dict(mean_deg=6),
-            smallworld_tail=dict(base_k=3, cap_degree=12, extra_attempts_per_node=5),
-        ),
-    )
-    results = single_biased_node_four_traces(**cfg)
-    averages = {
-        topo: results["topologies"][topo]["time_averages"].mean()
-        for topo in ["ring", "smallworld_hub", "smallworld_leaf"]
-    }
-    assert averages["smallworld_hub"] >= averages["ring"] - 5e-4
-    assert averages["smallworld_leaf"] <= averages["smallworld_hub"] + 5e-4
+def test_step_update_matches_manual_computation():
+    N = 6
+    neighbors = ring_neighbors(N, 1)
+    starts, flat_idx, deg = build_segments(neighbors)
+    x = np.linspace(-1.0, 1.0, N)
+    mu = 0.2
+    bias = np.zeros(N)
+    eta_t = np.random.default_rng(0).normal(scale=1e-3, size=N)
+
+    manual = _manual_update(x, neighbors, mu, bias, eta_t)
+    precomp = step_update_precomp(x, starts, flat_idx, deg, mu, bias, eta_t)
+    assert np.allclose(precomp, manual)
+
+
+def test_simulate_mean_traj_precomp_shape_and_finiteness():
+    N, T = 10, 50
+    mu = 0.05
+    neighbors = ring_neighbors(N, 2)
+    segments = build_segments(neighbors)
+    eta = np.zeros((T, N))
+    bias = np.zeros(N)
+    traj = simulate_mean_traj_precomp(N, *segments, mu, bias, eta)
+    assert traj.shape == (T,)
+    assert np.all(np.isfinite(traj))

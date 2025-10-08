@@ -19,12 +19,18 @@ def step_update_precomp(
     N = x.shape[0]
     next_x = np.empty_like(x, dtype=float)
     for i in range(N):
-        d = int(deg[i])
-        if d > 0:
-            idx = flat_idx[starts[i] : starts[i + 1]]
-            neigh_mean = x[idx].mean()
+        idx = flat_idx[starts[i] : starts[i + 1]]
+        if idx.size > 0:
+            neigh_deg = deg[idx]
+            contrib = np.divide(
+                x[idx],
+                neigh_deg,
+                out=np.zeros_like(x[idx], dtype=float),
+                where=neigh_deg > 0,
+            )
+            neigh_mean = float(np.sum(contrib))
         else:
-            neigh_mean = x[i]
+            neigh_mean = float(x[i])
         next_x[i] = (1.0 - mu) * x[i] + mu * neigh_mean + b[i] + eta_t[i]
     return next_x
 
