@@ -1,0 +1,15 @@
+N: 500
+T: 1000
+mu: 0.02
+trials: 100
+bias_level: 0.15
+rng_seed: 2025
+graph_params:
+  ring:
+    k: 5
+  er:
+    mean_deg: 10
+  smallworld_tail:
+    base_k: 5
+    cap_degree: 20
+    extra_attempts_per_node: 8

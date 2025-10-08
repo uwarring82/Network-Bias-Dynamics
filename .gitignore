@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dylib
+*.egg-info/
+.build/
+.venv/
+venv/
+.env
+dist/
+build/
+.ipynb_checkpoints/
+figures/*
+!.gitkeep
