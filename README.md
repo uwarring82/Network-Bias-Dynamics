@@ -53,3 +53,18 @@ and its **time-averaged shift**, comparing architectures:
 Python ≥ 3.9 and:
 ```bash
 pip install numpy matplotlib
+
+## License
+
+This project is released under the MIT License.
+
+## Citation
+
+If you use this repository in your research, please cite as:
+
+U. Warring, Network-Bias-Dynamics: Structural amplification of local bias in distributed networks (2025).
+https://github.com/uwarring82/Network-Bias-Dynamics
+
+## Acknowledgment
+
+This repository emerged from discussions on network robustness and bias propagation in distributed systems, inspired by analogies with metrological and information networks.
