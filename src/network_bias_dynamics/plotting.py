@@ -21,12 +21,20 @@ COLORS = {
 
 
 def _plot_with_sem(
-    ax, time: np.ndarray, trials: np.ndarray, label: str, color: Optional[str]
+    ax,
+    time: np.ndarray,
+    trials: np.ndarray,
+    time_avgs: np.ndarray | None,
+    label: str,
+    color: Optional[str],
 ) -> float:
     mean, sem = trajectory_mean_and_sem(trials)
     line = ax.plot(time, mean, label=label, color=color)[0]
     ax.fill_between(time, mean - sem, mean + sem, color=line.get_color(), alpha=0.2)
-    ta = float(trials.mean(axis=1).mean())
+    if time_avgs is not None and time_avgs.size:
+        ta = float(np.mean(time_avgs))
+    else:
+        ta = float(trials.mean(axis=1).mean())
     ax.axhline(ta, linestyle="--", color=line.get_color(), alpha=0.7)
     return ta
 
@@ -42,8 +50,9 @@ def plot_compare_topologies(results: Dict[str, object], save_path: str | Path) -
         ("smallworld", "Small-world"),
     ]:
         trials = results["topologies"][topo]["trajectories"]
+        time_avgs = results["topologies"][topo].get("time_averages")
         color = COLORS.get(topo, None)
-        _plot_with_sem(ax, time, trials, label, color or None)
+        _plot_with_sem(ax, time, trials, time_avgs, label, color or None)
     ax.set_xlabel("Time step")
     ax.set_ylabel("Network mean")
     ax.set_title("Bias propagation under identical noise")
@@ -67,8 +76,9 @@ def plot_single_biased_node(results: Dict[str, object], save_path: str | Path) -
         ("smallworld_leaf", "Small-world leaf biased"),
     ]:
         trials = results["topologies"][topo]["trajectories"]
+        time_avgs = results["topologies"][topo].get("time_averages")
         color = COLORS.get(topo, None)
-        _plot_with_sem(ax, time, trials, label, color or None)
+        _plot_with_sem(ax, time, trials, time_avgs, label, color or None)
     ax.set_xlabel("Time step")
     ax.set_ylabel("Network mean")
     ax.set_title("Single biased node trajectories")

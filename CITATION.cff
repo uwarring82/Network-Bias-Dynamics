@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: Network-Bias-Dynamics
+message: If you use this software, please cite it.
+authors:
+  - family-names: Warring
+    given-names: Ulrich
+year: 2025
+repository-code: https://github.com/uwarring82/Network-Bias-Dynamics
