@@ -1,71 +1,77 @@
-# Network-Bias-Dynamics
+# Network Bias Dynamics
 
-This repository investigates how **network structure** influences the **propagation and persistence of local biases** in distributed systems.  
-The simulations explore how a single biased node, local noise processes, and coupling topologies (regular, random, and small-world) interact to generate measurable global drifts.
-
-## Motivation
-
-When information, estimates, or control signals are exchanged across a network of nodes, the network topology implicitly defines *who influences whom*.  
-Even small structural variations — such as shortcut edges or hubs — can amplify or suppress systematic deviations.  
-Here, we study this phenomenon in a controlled setting, using simplified consensus dynamics with additive noise and localized biases.
-
-The goal is to quantify:
-- how **topological heterogeneity** (e.g. small-world shortcuts, hub dominance) affects bias propagation,
-- how **noise and local averaging** interact to mitigate or amplify these effects,
-- and what **robust architectures** minimize global drift.
-
-## Model Summary
-
-Each node \(i\) maintains a scalar state \(x_i(t)\) and updates it by averaging with its neighbors:
+Reproducible simulation suite for studying how small biases propagate through consensus-like averaging dynamics on different network topologies. The model follows a noisy DeGroot-style update
 
 \[
-x_i(t+1) = (1 - \mu) \left( \frac{1}{|N_i|+1} \left[ x_i(t) + \sum_{j \in N_i} x_j(t) \right] \right)
-          + \mu\, b_i + \eta_i(t)
+\mathbf{x}_{t+1} = (1-\mu)\mathbf{x}_t + \mu A \mathbf{x}_t + \mathbf{b} + \boldsymbol{\eta}_t,
 \]
 
-- \(b_i\): local bias (often nonzero for a single node)
-- \(\eta_i(t)\): additive noise, independent across nodes (IID)
-- \(\mu\): bias weight
-- \(N_i\): neighborhood of node \(i\)
+where `A` encodes neighbour averaging, `\mathbf{b}` injects persistent node biases, and `\boldsymbol{\eta}_t` is IID Gaussian noise.
 
-We track the **ensemble mean**
-\[
-\bar{x}(t) = \frac{1}{N} \sum_i x_i(t)
-\]
-and its **time-averaged shift**, comparing architectures:
+![Preview of generated figures](figures/compare_topologies.png)
 
-| Topology | Description | Mean Degree | Notes |
-|-----------|--------------|--------------|-------|
-| Regular | Ring lattice | 10 | Uniform connectivity |
-| Random | Erdős–Rényi | ≈10 | Homogeneous on average |
-| Small-World | Ring + shortcuts | 10–20 | Mix of local and long-range edges |
+## Features
 
-## Results Overview
+- Pure NumPy implementations of ring, Erdős–Rényi, and small-world graphs.
+- Fast simulations using pre-computed neighbour segments.
+- Batch experiments that reuse the same noise forcing across topologies for fair comparisons.
+- Convenience analysis helpers that output tidy CSV summaries.
+- Publication-ready plotting utilities.
 
-- Bias on a **hub node** produces significantly larger global drift than the same bias on a peripheral (low-degree) node.
-- **Increasing connectivity** reduces variance but does not eliminate topology-dependent bias amplification.
-- Regular networks distribute influence uniformly and yield minimal drift.
-- Random and small-world networks show **structural vulnerability**: shortcuts can act as channels for disproportionate influence.
+## Quickstart
 
-## Getting Started
-
-### Requirements
-Python ≥ 3.9 and:
 ```bash
-pip install numpy matplotlib
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+pip install -r requirements.txt
 ```
+
+Run the baseline experiments (figures saved under `figures/`):
+
+```bash
+python scripts/run_compare_topologies.py --config configs/compare_topologies.yaml
+python scripts/run_single_biased_node.py --config configs/single_biased_node.yaml
+```
+
+Each command produces a PNG with mean ± SEM trajectories and a CSV summary of time-averaged shifts.
+
+## Repository Layout
+
+```
+Network-Bias-Dynamics/
+├── configs/                     # YAML experiment configurations
+├── figures/                     # Generated figures & CSV summaries
+├── notebooks/                   # Jupyter notebooks for exploration
+├── scripts/                     # Entry-point CLI scripts
+├── src/network_bias_dynamics/   # Core simulation package
+└── tests/                       # Pytest unit tests
+```
+
+## Reproducing the four-trace biased-node experiment
+
+The script `scripts/run_single_biased_node.py` creates a heavy-tailed small-world network per trial, locates the highest- and lowest-degree nodes, and injects a persistent bias of `0.15` into either the hub or the leaf. The resulting trajectories illustrate how network position modulates long-term drift.
+
+To adjust the experiment, edit `configs/single_biased_node.yaml` (e.g., change `bias_level`, number of trials, or the degree cap).
+
+## Development
+
+Install optional tooling:
+
+```bash
+pip install -e .[dev]
+```
+
+Then run the linters and tests:
+
+```bash
+ruff check src
+black --check src scripts tests
+pytest -q
+```
+
+Continuous integration runs these checks across Python 3.9–3.12.
 
 ## License
 
-This project is released under the MIT License.
-
-## Citation
-
-If you use this repository in your research, please cite as:
-
-U. Warring, Network-Bias-Dynamics: Structural amplification of local bias in distributed networks (2025).
-https://github.com/uwarring82/Network-Bias-Dynamics
-
-## Acknowledgment
-
-This repository emerged from discussions on network robustness and bias propagation in distributed systems, inspired by analogies with metrological and information networks.
+Released under the MIT License. See [LICENSE](LICENSE) for details.
